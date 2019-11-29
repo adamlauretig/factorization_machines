@@ -29,12 +29,15 @@ betas <- matrix(rnorm(n = ncol(X_mat), 1, 3))
 linear_predictor <- X_mat %*% betas
 
 # factors ----
-
+# individual factors are gammas
+gamma_sd <- sort(rgamma(K, .1, .1), decreasing = TRUE)
 individual_factors <- mvrnorm(
-  n = N, mu = rnorm(K, 2, 1), Sigma = rgamma(K, 1, 1) * diag(K))
+  n = N, mu = rep(0, K), Sigma = gamma_sd * diag(K))
 
+# group 2 factors are deltas
+delta_sd <- sort(rgamma(K, .5, .5), decreasing = TRUE)
 group_2_factors <- mvrnorm(
-  n = J, mu = rnorm(K, -2, 1), Sigma = rgamma(K, .5, .5) * diag(K))
+  n = J, mu = rep(0, K), Sigma = delta_sd * diag(K))
 
 factor_terms <- matrix(NA, nrow = nrow(linear_predictor), ncol = 1)
 
@@ -61,3 +64,5 @@ m1_fit <- vb(m1,
 m1_posterior <- extract(m1_fit)
 colMeans( m1_posterior$linear_predictor)
 plot(y, colMeans( m1_posterior$linear_predictor))
+colMeans(m1_posterior$gamma_sd)
+plot(sort(colMeans(m1_posterior$gamma_sd)), sort(gamma_sd))

@@ -10,10 +10,13 @@ parameters{
   vector[J] group_2_betas; // non-interacted coefficients
   matrix[N, K] gammas; // individual factors
   matrix[J, K] deltas; // group 2 factors
-  vector[K] gamma_mean; //gamma prior mean
-  vector<lower=0>[K] gamma_sd; //gamma prior sd
-  vector[K] delta_mean; //gamma prior mean
-  vector<lower=0>[K] delta_sd; //gamma prior sd
+  positive_ordered[K] gamma_sd; //gamma prior sd
+  positive_ordered[K] delta_sd; //delta prior sd
+  real<lower = 0> a; // gamma hyperprior a
+  real<lower = 0> b; // gamma hyperprior b
+  real<lower = 0> c; // gamma hyperprior c
+  real<lower = 0> d; // gamma hyperprior d
+  
 }
 transformed parameters{
   vector[(N*J)] linear_predictor ;
@@ -25,17 +28,18 @@ model{
   indiv_betas ~ normal(1, 3) ;
   group_2_betas ~ normal(1, 3) ;
   
-  gamma_mean ~ normal(2, 1) ;
-  gamma_sd ~ gamma( 1, 1) ;
+  gamma_sd ~ gamma( a, b) ;
+  delta_sd ~ gamma( c, d) ;
   
-  delta_mean ~ normal(-2, 1) ;
-  delta_sd ~ gamma( .5, .5) ;
-  
+  a ~ gamma(.1, .1) ;
+  b ~ gamma(.1, .1) ;
+  c ~ gamma(.1, .1) ;
+  d ~ gamma(.1, .1) ;
   for(n in 1:N){
-    gammas[n, ] ~ normal(gamma_mean, gamma_sd) ;
+    gammas[n, ] ~ normal(rep_vector(0, K), gamma_sd) ;
   }
     for(j in 1:J){
-    deltas[j, ] ~ normal(delta_mean, delta_sd) ;
+    deltas[j, ] ~ normal(rep_vector(0, K), delta_sd) ;
   }
   y ~normal(linear_predictor, 1) ;
 }
